@@ -156,9 +156,35 @@ textarea.inp{resize:vertical;min-height:70px;line-height:1.5}
 "use strict";
 /* ============ store ============ */
 var VK="vslp_videos",CK="vslp_cfg",SK="vslp_stats";
+
+var INITIAL_VIDEOS = [
+  {
+    id: "freq33hz",
+    name: "BR Frequência 33 - E-mail vazado do Epstein",
+    src: "https://pub-fdb774497a0f4de3af048a5d75293013.r2.dev/BR%20Frequ%C3%AAncia%2033%20E-mail%20vazado%20do%20Epstein.mp4",
+    poster: "",
+    thumb: "",
+    created: Date.now(),
+    del: 0,
+    cfg: Object.assign({}, DEF, {
+      accent: "#f5be38",
+      barColor: "#f5be38",
+      smart: 1,
+      noPause: 1,
+      resume: 1,
+      cta: 1,
+      ctaText: "QUERO OUVIR AS 17 FREQUÊNCIAS",
+      ctaUrl: "https://pay.hotmart.com/A106763536Q?off=xkhug1y2",
+      ctaTime: 1409,
+      ctaColor: "#098940",
+      ctaSub: "Acesso Imediato + Garantia Blindada"
+    })
+  }
+];
+
 function load(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast("Sem espaço no navegador")}}
-var DB={get videos(){return load(VK,[])},set videos(v){save(VK,v)},
+var DB={get videos(){var v=load(VK,null);if(!v||!v.length){save(VK,INITIAL_VIDEOS);return INITIAL_VIDEOS;}return v;},set videos(v){save(VK,v)},
   get cfg(){return Object.assign({brand:"GuimaTurb",initials:"GM",accent:"#2563eb",cta:"#16a34a",domains:""},load(CK,{}))},
   set cfg(v){save(CK,v)},
   get stats(){return load(SK,{})}};
