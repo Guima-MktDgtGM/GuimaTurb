@@ -33,6 +33,8 @@ video::-webkit-media-controls{display:none!important}
 #fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--bar,#2563eb);border-radius:999px}
 #knob{position:absolute;top:50%;left:0;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.5);opacity:0;transition:opacity .15s}
 #bar:hover #knob,#bar.drag #knob{opacity:1}
+.unseekable,.unseekable *{pointer-events:none!important;cursor:default!important}
+.unseekable #knob{display:none!important}
 #row{display:flex;align-items:center;gap:4px;color:#fff}
 #row .sp{flex:1}
 .ic{width:34px;height:34px;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;opacity:.92;flex:none}
@@ -132,7 +134,7 @@ if(!+C.speedCtl)$("spd").classList.add("hide");
 if(!+C.pip||!document.pictureInPictureEnabled)$("pip").classList.add("hide");
 if(!+C.fullscreen||(isMobile&&!+C.fsMobile)||(!isMobile&&!+C.fsDesktop))$("fs").classList.add("hide");
 if(!+C.showBar){bar.style.visibility="hidden";bar.style.pointerEvents="none";}
-if(!+C.seek){bar.style.cursor="default";knob.style.display="none";}
+if(+C.smart||!+C.seek||+C.noPause){bar.classList.add("unseekable");bar.style.pointerEvents="none";bar.style.cursor="default";knob.style.display="none";}
 if(+C.loop)v.loop=true;
 
 function setSrc(url){v.src=url;v.load();}
@@ -213,16 +215,16 @@ $("fs").onclick=function(e){e.stopPropagation();var el=document.documentElement;
   else if(el.requestFullscreen)el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
   else if(v.webkitEnterFullscreen)v.webkitEnterFullscreen();};
 
-function seekAt(clientX){var r=bar.getBoundingClientRect();var f=(clientX-r.left)/r.width;var d=v.duration||0;if(d&&isFinite(d))v.currentTime=undisp(f)*d;}
+function seekAt(clientX){if(+C.smart||!+C.seek||+C.noPause)return;var r=bar.getBoundingClientRect();var f=(clientX-r.left)/r.width;var d=v.duration||0;if(d&&isFinite(d))v.currentTime=undisp(f)*d;}
 var dragging=false;
-bar.addEventListener("pointerdown",function(e){if(!+C.showBar||!+C.seek)return;dragging=true;bar.classList.add("drag");try{bar.setPointerCapture(e.pointerId)}catch(x){}seekAt(e.clientX)});
+bar.addEventListener("pointerdown",function(e){if(!+C.showBar||!+C.seek||+C.smart||+C.noPause)return;dragging=true;bar.classList.add("drag");try{bar.setPointerCapture(e.pointerId)}catch(x){}seekAt(e.clientX)});
 bar.addEventListener("pointermove",function(e){if(dragging)seekAt(e.clientX)});
 bar.addEventListener("pointerup",function(e){dragging=false;bar.classList.remove("drag");e.stopPropagation()});
 bar.addEventListener("click",function(e){e.stopPropagation()});
 ctr.addEventListener("click",function(e){e.stopPropagation()});
 
 var tHide;
-function showCtr(){ctr.classList.add("on");clearTimeout(tHide);tHide=setTimeout(function(){if(!v.paused&&!dragging)ctr.classList.remove("on")},2600)}
+function showCtr(){ctr.classList.add("on");clearTimeout(tHide);if(!+C.smart){tHide=setTimeout(function(){if(!v.paused&&!dragging)ctr.classList.remove("on")},2600)}}
 ["mousemove","touchstart","pointerdown"].forEach(function(ev){stage.addEventListener(ev,showCtr)});
 v.addEventListener("pause",showCtr);
 
@@ -237,8 +239,8 @@ $("ctaa").addEventListener("click",function(){emit("cta_click");stats(function(o
 
 document.addEventListener("keydown",function(e){
   if(e.code==="Space"||e.key===" "){e.preventDefault();toggle()}
-  else if(e.key==="ArrowRight")v.currentTime=Math.min(v.duration||0,v.currentTime+10);
-  else if(e.key==="ArrowLeft")v.currentTime=Math.max(0,v.currentTime-10);
+  else if(e.key==="ArrowRight"&&!+C.smart&&!+C.noPause)v.currentTime=Math.min(v.duration||0,v.currentTime+10);
+  else if(e.key==="ArrowLeft"&&!+C.smart&&!+C.noPause)v.currentTime=Math.max(0,v.currentTime-10);
   else if(e.key==="ArrowUp"){$("vol").value=Math.min(1,v.volume+.1);v.volume=+$("vol").value;icVol()}
   else if(e.key==="ArrowDown"){$("vol").value=Math.max(0,v.volume-.1);v.volume=+$("vol").value;icVol()}
   else if(e.key&&e.key.toLowerCase()==="m"){v.muted=!v.muted;if(!v.muted)um.classList.add("hide");icVol()}
